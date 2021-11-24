@@ -145,7 +145,7 @@ public class EmployeeMIDAS extends HttpServlet {
 
 	protected void doDelete(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
-
+		
 	}
 
 	protected void doDetails(HttpServletRequest request, HttpServletResponse response)
