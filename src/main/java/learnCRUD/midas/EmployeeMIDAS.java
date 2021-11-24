@@ -7,6 +7,7 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -33,6 +34,8 @@ public class EmployeeMIDAS extends HttpServlet {
 
 	private Gson gson = new Gson();// declare class awal json atau inisiasi objt
 	private GsonBuilder gsonBuilder = new GsonBuilder();// inisiasi
+	private static final String EMP_NAME = "nameEmp";
+	private static final String EMP_POSITION = "empPos";
 
 	private EmployeeService empService;
 
@@ -74,11 +77,11 @@ public class EmployeeMIDAS extends HttpServlet {
 		String empPos = request.getParameter("empPos");
 
 		Employee emp = new Employee();
-
 		emp.setEmpNo(id);
 		emp.setPosition(empPos);
 		emp.setEmpName(empName);
 		empService.addEmp(emp);
+
 		if (empService != null) {
 			out.println("Success Create New Employee");
 		}
@@ -88,7 +91,7 @@ public class EmployeeMIDAS extends HttpServlet {
 			throws ServletException, IOException {
 		PrintWriter out = response.getWriter();
 		Integer idNew = Integer.parseInt(request.getParameter("id"));
-
+		Employee emp;
 		String result = new BufferedReader(new InputStreamReader(request.getInputStream())).lines().parallel()
 				.collect(Collectors.joining("\n"));
 
@@ -97,33 +100,37 @@ public class EmployeeMIDAS extends HttpServlet {
 		// split by new line, trim and filter empty line
 		List<String> lines = Arrays.stream(result.split("\\n")).map(x -> x.trim()).collect(Collectors.toList());
 
-		Employee emp = new Employee();
-		lines.forEach(line -> {
-			Pattern pattern = Pattern.compile("[^A-Za-z0-9]");
-			Matcher match = pattern.matcher(line);
-			boolean val = match.find();
+		List<Employee> empServ = empService.listOfEmp();
+		Optional<Employee> optEmp = empServ.stream().filter(employee -> employee.getEmpNo().compareTo(idNew) == 0)
+				.findFirst();
+		if (optEmp.isPresent()) {
+			emp = optEmp.get();
 
-			if (!val) {
-				if (!emp.getEmpName().equals(null)) {
-					emp.setEmpName(line.trim());
+			String key = "";
+			for (String line : lines) {
+				Pattern pattern = Pattern.compile("[^A-Za-z]");
+				Matcher match = pattern.matcher(line);
+				boolean val = match.find();
+
+				if (line.indexOf("=") > 0) {
+					String[] temp = line.split("=" + "", line.length() - 1);
+					System.out.println(temp.length);
+					System.out.println(temp[1].substring(1, temp[1].length() - 1));
+					key = temp[1].substring(1, temp[1].length() - 1);
 				}
-				
-				if() {
-					
+
+				if (!val) {
+					if (line.length() > 0 && key.equals(EMP_NAME)) {
+						emp.setEmpName(line.trim());
+						key = "";
+					} else if (line.length() > 0 && key.equals(EMP_POSITION)) {
+						emp.setPosition(line.trim());
+						key = "";
+					}
 				}
-				System.out.println(line);
 			}
-		});
-		
 
-		emp.setPosition(empPosNew);
-		emp.setEmpName(empNameNew);
-
-		try {
 			empService.updateEmp(emp);
-		} catch (Exception e) {
-			// TODO: handle exception
-			out.println(emp);
 		}
 
 	}
@@ -141,4 +148,9 @@ public class EmployeeMIDAS extends HttpServlet {
 
 	}
 
+	protected void doDetails(HttpServletRequest request, HttpServletResponse response)
+			throws ServletException, IOException {
+		
+
+	}
 }

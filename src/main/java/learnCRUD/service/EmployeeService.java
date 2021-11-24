@@ -33,8 +33,8 @@ public class EmployeeService implements IEmployeeService {
 		// TODO Auto-generated method stub
 		Integer idEmp = putEmp.getEmpNo();
 		
-		listEmployees.set(idEmp , putEmp);
-		return putEmp;
+		listEmployees.set(idEmp-1 , putEmp);
+		return null;
 	}
 	
 	
